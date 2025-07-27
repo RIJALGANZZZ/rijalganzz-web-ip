@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Ip Settings</title>
+
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- Axios -->
+  <script defer src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 sm:p-6">
+  <div class="max-w-screen-sm mx-auto">
+    <!-- Header -->
+    <header class="flex items-center mb-6">
+      <i class="bi-shield-lock-fill text-3xl text-blue-600 mr-2"></i>
+      <h1 class="text-2xl font-bold text-gray-800">Admins Setting</h1>
+    </header>
+
+    <!-- Input -->
+    <section class="bg-white shadow-lg rounded p-4 sm:p-6 mb-6">
+      <h2 class="text-lg sm:text-xl font-semibold mb-4 flex items-center">
+        <i class="bi-plus-circle-fill text-green-600 mr-2"></i> Add New IP
+      </h2>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <input type="text" id="newIp" placeholder="Enter IP (e.g. 1.1.1.1)" class="border border-gray-300 p-2 rounded w-full" />
+        <button onclick="addIp()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center justify-center">
+          <i class="bi-plus-circle mr-2"></i>Add
+        </button>
+      </div>
+    </section>
+
+    <!-- IP List Table -->
+    <section class="bg-white shadow-lg rounded p-4 sm:p-6">
+      <h2 class="text-lg sm:text-xl font-semibold mb-4 flex items-center">
+        <i class="bi-table text-blue-600 mr-2"></i>List IP Users</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="bg-gray-200">
+              <th class="p-2 border-b">#</th>
+              <th class="p-2 border-b">IP Address</th>
+              <th class="p-2 border-b text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody id="ipTable" class="text-gray-700"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Status -->
+    <p id="status" class="mt-4 text-green-600 font-semibold text-sm"></p>
+  </div>
+
+<script>
+  let ipList = [];
+
+  const fetchIps = async () => {
+    try {
+      const res = await fetch("/auth/ipjson");
+      let hasil = await res.json() || [];
+      ipList = hasil.ip
+      renderTable();
+    } catch (err) {
+      console.error("Fetch error:", err);
+    }
+  };
+
+  const renderTable = () => {
+    const tbody = document.getElementById("ipTable");
+    tbody.innerHTML = ipList.length
+      ? ipList.map((ip, i) => `
+        <tr class="hover:bg-gray-50">
+          <td class="p-2 border-b">${i + 1}</td>
+          <td class="p-2 border-b">${ip}</td>
+          <td class="p-2 border-b text-center">
+            <button onclick="deleteIp('${ip}')" class="text-red-500 hover:text-red-700">
+              <i class="bi-trash-fill text-lg"></i>
+            </button>
+          </td>
+        </tr>`).join("")
+      : `<tr><td colspan="3" class="text-center p-4 text-gray-400">No IPs added.</td></tr>`;
+  };
+
+  const isValidIp = ip => /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/.test(ip);
+
+  const addIp = async () => {
+    const ip = document.getElementById("newIp").value.trim();
+    if (!ip) return alert("IP tidak boleh kosong");
+    if (!isValidIp(ip)) return alert("Format IP tidak valid (contoh: 192.168.0.1)");
+    if (ipList.includes(ip)) return alert("IP sudah ada di whitelist");
+
+    try {
+      await fetch("/api/admin/ip-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify([...ipList, ip])
+      });
+      document.getElementById("status").textContent = `✅ IP ${ip} berhasil ditambahkan.`;
+      document.getElementById("newIp").value = "";
+    } catch (err) {
+      console.error("Add error:", err);
+    }
+  };
+
+  const deleteIp = async ip => {
+    try {
+      await fetch("/api/admin/ip-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(ipList.filter(i => i !== ip))
+      });
+      document.getElementById("status").textContent = `🗑️ IP ${ip} dihapus.`;
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
+  };
+
+  fetchIps();
+  setInterval(fetchIps, 300);
+</script>
+</body>
+</html>
