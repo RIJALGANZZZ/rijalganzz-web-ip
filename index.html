@@ -3,132 +3,360 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Ip Settings</title>
-
+  <title>Admin IP Settings</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
-  <!-- Bootstrap Icons -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-
-  <!-- Axios -->
-  <script defer src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+    }
+    .spinner {
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top: 3px solid white;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg);}
+      100% { transform: rotate(360deg);}
+    }
+    .card {
+      box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+    }
+    .card:hover {
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    }
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+    .btn-danger:hover {
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    }
+    .btn-success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    .btn-success:hover {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    }
+    .table-row:hover {
+      background-color: #f8fafc;
+    }
+    .animate-scale {
+      animation: scaleIn 0.2s ease;
+    }
+    @keyframes scaleIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .input-focus:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
     }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 sm:p-6">
-  <div class="max-w-screen-sm mx-auto">
+<body class="min-h-screen">
+  <div class="container mx-auto px-4 py-8 max-w-4xl">
     <!-- Header -->
-    <header class="flex items-center mb-6">
-      <i class="bi-shield-lock-fill text-3xl text-blue-600 mr-2"></i>
-      <h1 class="text-2xl font-bold text-gray-800">Admins Setting</h1>
-    </header>
-
-    <!-- Input -->
-    <section class="bg-white shadow-lg rounded p-4 sm:p-6 mb-6">
-      <h2 class="text-lg sm:text-xl font-semibold mb-4 flex items-center">
-        <i class="bi-plus-circle-fill text-green-600 mr-2"></i> Add New IP
-      </h2>
-      <div class="flex flex-col sm:flex-row gap-4">
-        <input type="text" id="newIp" placeholder="Enter IP (e.g. 1.1.1.1)" class="border border-gray-300 p-2 rounded w-full" />
-        <button onclick="addIp()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center justify-center">
-          <i class="bi-plus-circle mr-2"></i>Add
-        </button>
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+      <div class="flex items-center mb-4 sm:mb-0">
+        <div class="bg-blue-100 p-3 rounded-lg mr-4">
+          <i class="fas fa-shield-alt text-blue-600 text-2xl"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">IP Whitelist Management</h1>
+          <p class="text-gray-500 text-sm">Manage authorized IP addresses for admin access</p>
+        </div>
       </div>
-    </section>
+      <div class="flex items-center bg-blue-50 px-4 py-2 rounded-lg">
+        <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+        <span class="text-sm text-blue-700">Total IPs: <span id="ipCount" class="font-semibold">0</span></span>
+      </div>
+    </div>
+
+    <!-- Add IP Card -->
+    <div class="card bg-white rounded-xl p-6 mb-8">
+      <div class="flex items-center mb-4">
+        <div class="p-2 rounded-full mr-3">
+  <i class="fas fa-plus text-green-600"></i>
+</div>
+<h2 class="text-xl font-semibold text-gray-800">Add New IP Address</h2>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-4">
+        <div class="flex-1">
+          <label for="newIp" class="block text-sm font-medium text-gray-700 mb-1">IP Address</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fas fa-network-wired text-gray-400"></i>
+            </div>
+            <input 
+              type="text" 
+              id="newIp" 
+              placeholder="Enter IP (e.g. 192.168.1.1)" 
+              class="input-focus pl-10 w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none transition duration-200" 
+            />
+          </div>
+        </div>
+        <div class="flex items-end">
+          <button 
+            id="addBtn" 
+            onclick="addIp()" 
+            class="btn-success text-white px-6 py-2 rounded-lg flex items-center justify-center gap-2 h-10 transition duration-200 hover:shadow-md"
+          >
+            <span id="addIcon" class="flex items-center">
+              <i class="fas fa-plus-circle mr-1"></i> Add IP
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- IP List Table -->
-    <section class="bg-white shadow-lg rounded p-4 sm:p-6">
-      <h2 class="text-lg sm:text-xl font-semibold mb-4 flex items-center">
-        <i class="bi-table text-blue-600 mr-2"></i>List IP Users</h2>
+    <div class="card bg-white rounded-xl overflow-hidden"><div class="p-6 pb-4">
+  <div class="flex items-center mb-4">
+    <div class="px-3 py-2 rounded-md">
+      <i class="fas fa-list text-blue-600"></i>
+    </div>
+    <h2 class="text-xl font-semibold text-gray-800">List IP Addresses</h2>
+  </div>
+</div>
       <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse text-sm">
-          <thead>
-            <tr class="bg-gray-200">
-              <th class="p-2 border-b">#</th>
-              <th class="p-2 border-b">IP Address</th>
-              <th class="p-2 border-b text-center">Action</th>
+        <table class="w-full text-left">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+              <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
+              <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Actions</th>
             </tr>
           </thead>
-          <tbody id="ipTable" class="text-gray-700"></tbody>
+          <tbody id="ipTable" class="divide-y divide-gray-200">
+            <!-- Table content will be generated by JavaScript -->
+          </tbody>
         </table>
       </div>
-    </section>
+      
+      <div id="emptyState" class="p-12 text-center hidden">
+        <i class="fas fa-inbox text-gray-300 text-4xl mb-3"></i>
+        <h3 class="text-gray-500 font-medium">No IP addresses added yet</h3>
+        <p class="text-gray-400 text-sm mt-1">Add your first IP address using the form above</p>
+      </div>
+    </div>
 
-    <!-- Status -->
-    <p id="status" class="mt-4 text-green-600 font-semibold text-sm"></p>
+    <!-- Status Message -->
+    <div id="status" class="mt-4 text-center text-sm font-medium hidden"></div>
   </div>
 
-<script>
-  let ipList = [];
+  <!-- Error Modal -->
+  <div id="errorModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 hidden">
+    <div class="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 relative animate-scale mx-4">
+      <button onclick="closeError()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl">
+        <i class="fas fa-times"></i>
+      </button>
+      <div class="flex flex-col items-center text-center">
+<h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+  <i class="fas fa-exclamation-circle text-red-500 text-2xl"></i>
+  Error
+</h3>
+        <p id="errorMessage" class="text-gray-600 mb-4"></p>
+        <button onclick="closeError()" class="btn-primary text-white px-6 py-2 rounded-lg transition duration-200">
+          Okay
+        </button>
+      </div>
+    </div>
+  </div>
 
-  const fetchIps = async () => {
-    try {
-      const res = await fetch("/auth/ipjson");
-      let hasil = await res.json() || [];
-      ipList = hasil.ip
-      renderTable();
-    } catch (err) {
-      console.error("Fetch error:", err);
-    }
-  };
+  <!-- Delete Confirmation Modal -->
+  <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 mx-4 animate-scale">
+      <div class="flex flex-col items-center text-center">
+        <div class="bg-red-100 p-3 rounded-full mb-4">
+          <i class="fas fa-trash-alt text-red-500 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-1">Confirm Deletion</h3>
+        <p class="text-gray-600 mb-4">Are you sure you want to delete <span id="ipToDelete" class="font-semibold"></span>?</p>
+        <div class="flex gap-3 w-full">
+          <button onclick="closeConfirm()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg transition duration-200">
+            Cancel
+          </button>
+          <button onclick="confirmDelete()" class="flex-1 btn-danger text-white px-4 py-2 rounded-lg transition duration-200">
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  const renderTable = () => {
-    const tbody = document.getElementById("ipTable");
-    tbody.innerHTML = ipList.length
-      ? ipList.map((ip, i) => `
-        <tr class="hover:bg-gray-50">
-          <td class="p-2 border-b">${i + 1}</td>
-          <td class="p-2 border-b">${ip}</td>
-          <td class="p-2 border-b text-center">
-            <button onclick="deleteIp('${ip}')" class="text-red-500 hover:text-red-700">
-              <i class="bi-trash-fill text-lg"></i>
+  <script>
+    let ipList = [];
+    let ipToDelete = null;
+
+    const fetchIps = async () => {
+      try {
+        const res = await fetch("/auth/ipjson");
+        let hasil = await res.json() || [];
+        ipList = hasil.ip || [];
+        renderTable();
+        updateIpCount();
+      } catch (err) {
+        console.error("Fetch error:", err);
+      }
+    };
+
+    const updateIpCount = () => {
+      document.getElementById('ipCount').textContent = ipList.length;
+    };
+
+    const renderTable = () => {
+      const tbody = document.getElementById("ipTable");
+      const emptyState = document.getElementById("emptyState");
+      
+      if (ipList.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      
+      emptyState.classList.add('hidden');
+      tbody.innerHTML = ipList.map((ip, i) => `
+        <tr class="table-row">
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${i + 1}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <div class="flex items-center">
+              <i class="text-blue-400 mr-2"></i>
+              <span class="font-mono">${ip}</span>
+            </div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+            <button onclick="promptDelete('${ip}')" class="text-red-500 hover:text-red-700 transition duration-200">
+              <i class="fas fa-trash-alt"></i>
             </button>
           </td>
-        </tr>`).join("")
-      : `<tr><td colspan="3" class="text-center p-4 text-gray-400">No IPs added.</td></tr>`;
-  };
+        </tr>`).join("");
+    };
 
-  const isValidIp = ip => /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/.test(ip);
+    const isValidIp = ip =>
+      /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/.test(ip);
 
-  const addIp = async () => {
-    const ip = document.getElementById("newIp").value.trim();
-    if (!ip) return alert("IP tidak boleh kosong");
-    if (!isValidIp(ip)) return alert("Format IP tidak valid (contoh: 192.168.0.1)");
-    if (ipList.includes(ip)) return alert("IP sudah ada di whitelist");
+    const showError = (message) => {
+      document.getElementById("errorMessage").textContent = message;
+      document.getElementById("errorModal").classList.remove("hidden");
+    };
 
-    try {
-      await fetch("/api/admin/ip-settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify([...ipList, ip])
+    const closeError = () => {
+      document.getElementById("errorModal").classList.add("hidden");
+    };
+
+    const promptDelete = (ip) => {
+      ipToDelete = ip;
+      document.getElementById("ipToDelete").textContent = ip;
+      document.getElementById("confirmModal").classList.remove("hidden");
+    };
+
+    const closeConfirm = () => {
+      document.getElementById("confirmModal").classList.add("hidden");
+      ipToDelete = null;
+    };
+
+    const showStatus = (message, isSuccess = true) => {
+      const statusEl = document.getElementById("status");
+      statusEl.textContent = message;
+      statusEl.className = `mt-4 text-center text-sm font-medium ${isSuccess ? 'text-green-600' : 'text-red-600'}`;
+      statusEl.classList.remove('hidden');
+      
+      setTimeout(() => {
+        statusEl.classList.add('hidden');
+      }, 5000);
+    };
+
+    const confirmDelete = async () => {
+      if (!ipToDelete) return;
+      try {
+        await fetch("/api/admin/ip-settings", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(ipList.filter(i => i !== ipToDelete))
+        });
+        
+        showStatus(`Successfully deleted IP: ${ipToDelete}`);
+        ipToDelete = null;
+        closeConfirm();
+        await fetchIps();
+      } catch (err) {
+        console.error("Delete error:", err);
+        showError("Failed to delete IP address");
+      }
+    };
+
+    const addIp = async () => {
+      const ip = document.getElementById("newIp").value.trim();
+      const addBtn = document.getElementById("addBtn");
+      const addIcon = document.getElementById("addIcon");
+
+      if (!ip) return showError("IP address cannot be empty");
+      if (!isValidIp(ip)) return showError("Invalid IP format. Please use valid IPv4 format (e.g. 192.168.1.1)");
+      if (ipList.includes(ip)) return showError("This IP is already in the whitelist");
+      
+      addIcon.innerHTML = `<div class="spinner"></div> Adding...`;
+      addBtn.disabled = true;
+
+      try {
+        await fetch("/api/admin/ip-settings", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify([...ipList, ip])
+        });
+
+        addIcon.innerHTML = `<i class="fas fa-check-circle mr-1"></i> Added`;
+        setTimeout(() => {
+          addIcon.innerHTML = `<i class="fas fa-plus-circle mr-1"></i> Add IP`;
+          addBtn.disabled = false;
+        }, 1200);
+
+        showStatus(`Successfully added IP: ${ip}`);
+        document.getElementById("newIp").value = "";
+        await fetchIps();
+      } catch (err) {
+        console.error("Add error:", err);
+        showError("Failed to add IP address");
+        addIcon.innerHTML = `<i class="fas fa-plus-circle mr-1"></i> Add IP`;
+        addBtn.disabled = false;
+      }
+    };
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchIps();
+      
+      // Add Enter key support for the input field
+      document.getElementById('newIp').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          addIp();
+        }
       });
-      document.getElementById("status").textContent = `✅ IP ${ip} berhasil ditambahkan.`;
-      document.getElementById("newIp").value = "";
-    } catch (err) {
-      console.error("Add error:", err);
-    }
-  };
-
-  const deleteIp = async ip => {
-    try {
-      await fetch("/api/admin/ip-settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(ipList.filter(i => i !== ip))
-      });
-      document.getElementById("status").textContent = `🗑️ IP ${ip} dihapus.`;
-    } catch (err) {
-      console.error("Delete error:", err);
-    }
-  };
-
-  fetchIps();
-  setInterval(fetchIps, 300);
-</script>
+      
+      // Auto-refresh every 20 seconds
+      setInterval(fetchIps, 20000);
+    });
+  </script>
 </body>
 </html>
